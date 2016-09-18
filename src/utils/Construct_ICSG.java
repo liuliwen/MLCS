@@ -1,9 +1,11 @@
 package utils;
 
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Stack;
 
 import com.google.common.collect.BiMap;
 
@@ -11,6 +13,10 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import javax.management.Query;
+
+
+
+
 
 
 
@@ -60,6 +66,11 @@ public class Construct_ICSG {
 	   
 	   
 }
+   /**
+    * 
+    * 产生四个后继节点
+    * 
+    */
    public static void ProduceSuc(PointNode point,List<SucTable> suc_table,Queue<PointNode> queuepoint){
 	   int[] pold=new int[suc_table.size()];
 	   int[] pnew;
@@ -88,6 +99,142 @@ public class Construct_ICSG {
 		   
 		 }
 
+   }
+
+   /**
+    *进行前向拓扑排序
+    *
+    */
+   public static int Forwardtopsort(List<SucTable> suc_table,HashBiMap<Integer, PointNode> DM,int maxLevel,PointNode p_end){
+	   
+	   Queue<PointNode> qpoint=new LinkedList<PointNode>();  //D （k）层的 临时队列
+	   Queue<PointNode> qpoint2; //D （k+1）层的临时队列
+	   BiMap<PointNode, Integer> inverse = DM.inverse();
+	   
+	   int k=0;                      //初始化层数为第0层
+	   PointNode point=DM.get(0);     //初始节点
+	   qpoint.offer(point);
+	   
+	  /* int[] end=new int[suc_table.size()];     //初始化终节点
+	   for(int i=0;i<suc_table.size();i++){
+		   end[i]=-1;
+	   }
+	   PointNode p_end=new PointNode();
+	   p_end.setPoint(end);*/
+	   
+	   while(!qpoint.isEmpty()){
+		   int count=qpoint.size();
+		   qpoint2=new LinkedList<PointNode>();
+		   for(int i=0;i<count;i++){
+			   PointNode q=qpoint.poll();   //即将产生后继的节点
+			   Queue<PointNode> queuepoint=new LinkedList<PointNode>();
+			   ProduceSuc(q, suc_table, queuepoint);    //queuepoint为后继节点链表
+			   int flag=0;       //用于标记 q是否存在后继节点
+			   
+			   while(!queuepoint.isEmpty()){
+				   flag++;
+				   PointNode ptem=queuepoint.poll();
+				   PointNode PN=DM.get(inverse.get(ptem));
+				   /**
+				    * 错误！直接后继不能这样求。
+				    */
+				   if(PN.getID()==1){
+					   if(PN.getPrecursor()==null)//前驱没有初始化，因此需要判断是否已经初始化了。
+						   PN.setPrecursor(new LinkedList<PointNode>());
+					   PN.getPrecursor().add(q);
+					   PN.setTleve(k+1);
+				   }
+				   PN.setID(PN.getID()-1);
+				   if(PN.getID()==0){
+					   qpoint2.offer(PN);
+				   }
+				   
+			   }
+			   
+			   if(flag==0){
+				   p_end.getPrecursor().add(q);
+			   }
+			   
+		   }
+		   
+		   qpoint=qpoint2;
+		   qpoint2=null;
+		   k++;
+		   
+	   }
+	   maxLevel=k-1;
+	   return maxLevel;	   
+   }
+   
+   /**
+    *进行后向拓扑排序
+    *
+    */
+   public static void BackwardTopSort (List<SucTable> suc_table,HashBiMap<Integer, PointNode> DM,int maxLevel,PointNode p_end) {
+	   Queue<PointNode> qpoint=new LinkedList<PointNode>();  //D （k）层的 临时队列
+	   Queue<PointNode>  qpoint2;//D （k+1）层的临时队列
+	   BiMap<PointNode, Integer> inverse = DM.inverse();
+	   
+	   qpoint.offer(p_end);
+	   int k=0;
+	   
+	   while(!qpoint.isEmpty()){
+		   qpoint2=new LinkedList<PointNode>();
+		   int count=qpoint.size();
+		   for(int i=0;i<count;i++){
+			   PointNode q=qpoint.poll();
+			   //int count2=q.getPrecursor().size();
+			   if(q.getPrecursor()!=null){
+				   for(int j=0;j<q.getPrecursor().size();j++){
+					   PointNode p=q.getPrecursor().get(j);
+					   if(p.getTleve()+k!=maxLevel){
+						   q.getPrecursor().remove(j);
+						   j--;
+					   }else{
+						   qpoint2.offer(p);
+					   }
+				   }
+			   }
+			   
+		   }
+		   qpoint=qpoint2;		   
+		   k++;
+		   
+	   }
+  }
+   
+   /**
+    *输出最后的节点坐标，拓扑排序之后的
+    *
+    */
+   public static List<String> getAllMlcs(HashBiMap<Integer, PointNode> DM,PointNode p_end){
+	   LinkedList<String> list = new LinkedList<String>();
+	   LinkedList<List> allList = new LinkedList<List>();
+	   ArrayList<PointNode> pointList = new ArrayList<PointNode>(100);
+	   allList.add(pointList);
+	   PrintLMCS(allList,pointList,p_end);
+	   /**
+	    * 将allList中保存的point转换为String
+	    */
+	   return list;
+   }
+   public static void PrintLMCS(LinkedList<List> allList,ArrayList<PointNode> pointList,PointNode p_end){
+	   Stack<PointNode> pointstack=new Stack<PointNode>();
+	   List<PointNode> p=p_end.getPrecursor();
+	   if(p == null)
+		   return;
+	   System.out.println(p_end);
+	   pointList.add(p_end);
+	   ArrayList<PointNode> newList=new ArrayList<PointNode>(pointList);;
+	   
+	   for (int i = 0;i<p.size();++i) {
+		   if (i>=1){
+			   pointList = new ArrayList<PointNode>(pointList);
+			   allList.add(pointList);
+		   }
+		   PointNode pointNode = p.get(i);
+		   PrintLMCS(allList,pointList,pointNode);		
+	   }
    }
 
 }

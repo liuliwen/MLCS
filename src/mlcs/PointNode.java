@@ -1,10 +1,29 @@
 package mlcs;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class PointNode {
 	int point[];
 	int ID;
+	int tleve;
+	List<PointNode> precursor;
+
+	public int getTleve() {
+		return tleve;
+	}
+
+	public void setTleve(int tleve) {
+		this.tleve = tleve;
+	}
+
+	public List<PointNode> getPrecursor() {
+		return precursor;
+	}
+
+	public void setPrecursor(List<PointNode> precursor) {
+		this.precursor = precursor;
+	}
 
 	public int getID() {
 		return ID;

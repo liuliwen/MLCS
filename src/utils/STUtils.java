@@ -51,8 +51,8 @@ public class STUtils {
 		char char_to_row[]=new char[256];
 		char_to_row['A']=0;
 		char_to_row['C']=1;
-		char_to_row['G']=2;
-		char_to_row['T']=3;
+		char_to_row['T']=2;
+		char_to_row['G']=3;
 		int length=sequence.length();
 		st.setLength(length);
 		int table[][]=new int[4][length+1];
